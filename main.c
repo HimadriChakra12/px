@@ -16,7 +16,6 @@
 #define HALF      (GRID_CELLS / 2)
 #define GAP       15
 
-/* swatch window size */
 #define SW_W  120
 #define SW_H   52
 
@@ -231,6 +230,8 @@ int main(int argc, char **argv) {
     XGrabPointer(display, rootw, False,
                  ButtonPressMask | PointerMotionMask,
                  GrabModeAsync, GrabModeAsync, None, cursor, CurrentTime);
+    XGrabKeyboard(display, rootw, False,
+                  GrabModeAsync, GrabModeAsync, CurrentTime);
 
     {
         Window root_ret, child_ret;
@@ -261,6 +262,10 @@ int main(int argc, char **argv) {
                         gc_prev, gc_sw, screen, font, mx, my);
         }
 
+        if (event.type == KeyPress) {
+            break;
+        }
+
         if (event.type == ButtonPress && event.xbutton.button == 1) {
             int x = event.xbutton.x;
             int y = event.xbutton.y;
@@ -286,6 +291,7 @@ int main(int argc, char **argv) {
     XFreeGC(display, gc_prev);
     XFreeGC(display, gc_sw);
     if (font) XFreeFont(display, font);
+    XUngrabKeyboard(display, CurrentTime);
     XUngrabPointer(display, CurrentTime);
     XFreeCursor(display, cursor);
     XCloseDisplay(display);
