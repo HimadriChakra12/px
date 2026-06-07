@@ -8,13 +8,13 @@
 #include <X11/Xutil.h>
 #include <X11/cursorfont.h>
 
-#define GRID_CELLS   9 
-#define CELL_PX      16
-#define CORNER_R     6      /* corner radius: 0 = square, ~8 = rounded */
+#define GRID_CELLS   9  
+#define CELL_PX      16 
+#define CORNER_R     6  
 
 #define WIN_SIZE  (GRID_CELLS * CELL_PX)
 #define HALF      (GRID_CELLS / 2)
-#define GAP       15
+#define GAP       20
 
 #define SW_W  120
 #define SW_H   52
