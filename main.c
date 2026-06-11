@@ -167,9 +167,17 @@ static void update_both(Display *dpy, Window rootw,
     XFlush(dpy);
 }
 
+static void copy_to_clipboard(const char *text)
+{
+    char cmd[256];
+    snprintf(cmd, sizeof(cmd),
+             "printf '%s' | xclip -selection clipboard", text);
+    system(cmd);
+}
+
 int main(int argc, char **argv) {
     int c;
-    bool hex = true, rgb = false, coordinate = false, view = false;
+    bool rgb = false, coordinate = false, view = false;
     while ((c = getopt(argc, argv, "hxrvcat:")) != -1) {
         switch (c) {
             case 'h':
@@ -185,11 +193,11 @@ int main(int argc, char **argv) {
                        "  -t <n>    sleep for n seconds\n\n"
                        "Tweak: GRID_CELLS, CELL_PX, CORNER_R, SW_W, SW_H at top of source\n");
                 return 0;
-            case 'x': hex = true;  rgb = false; break;
-            case 'r': rgb = true;  hex = false; break;
+            case 'x': rgb = false; break;
+            case 'r': rgb = true; break;
             case 'v': view = true; break;
             case 'c': coordinate = true; break;
-            case 'a': hex = true; view = true; coordinate = true; break;
+            case 'a': rgb = false; view = true; coordinate = true; break;
             case 't': sleep(atoi(optarg)); break;
         }
     }
@@ -269,16 +277,33 @@ int main(int argc, char **argv) {
         if (event.type == ButtonPress && event.xbutton.button == 1) {
             int x = event.xbutton.x;
             int y = event.xbutton.y;
-            XImage *image = XGetImage(display, rootw, x, y, 1, 1, AllPlanes, ZPixmap);
+
+            XImage *image = XGetImage(display, rootw, x, y, 1, 1,
+                    AllPlanes, ZPixmap);
+
             int color = XGetPixel(image, 0, 0);
+
             int r = (color & image->red_mask)   >> 16;
-            int g = (color & image->green_mask) >>  8;
+            int g = (color & image->green_mask) >> 8;
             int b = (color & image->blue_mask);
 
-            if (rgb)        printf("%d, %d, %d", r, g, b);
-            if (hex)        printf("#%06x", color);
-            if (view)       printf("  \033[48;2;%d;%d;%dm      \033[0m", r, g, b);
-            if (coordinate) printf("  (%dx%d)", x, y);
+            char out[128];
+
+            if (rgb)
+                snprintf(out, sizeof(out), "%d, %d, %d", r, g, b);
+            else
+                snprintf(out, sizeof(out), "#%06x", color & 0xFFFFFF);
+
+            copy_to_clipboard(out);
+
+            printf("%s", out);
+
+            if (view)
+                printf("  \033[48;2;%d;%d;%dm      \033[0m", r, g, b);
+
+            if (coordinate)
+                printf("  (%dx%d)", x, y);
+
             putchar('\n');
 
             XDestroyImage(image);
